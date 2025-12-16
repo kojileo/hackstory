@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  cockroachdb:
+    image: cockroachdb/cockroach:latest
+    container_name: hackstory-cockroachdb
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    volumes:
+      - cockroachdb-data:/cockroach/cockroach-data
+    environment:
+      - COCKROACH_DATABASE=hackstory_dev
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: hackstory-backend
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=cockroachdb;Port=26257;Database=hackstory_dev;Username=root;Password=;SSL Mode=Disable
+      - FrontendUrl=http://localhost:3000
+    depends_on:
+      - cockroachdb
+    volumes:
+      - ../backend:/app
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: hackstory-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+volumes:
+  cockroachdb-data:
+

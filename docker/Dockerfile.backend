@@ -1,0 +1,35 @@
+# バックエンド用Dockerfile（マルチステージビルド）
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# ソリューションとプロジェクトファイルをコピー
+COPY backend/HackStory.sln .
+COPY backend/HackStory.Domain/HackStory.Domain.csproj backend/HackStory.Domain/
+COPY backend/HackStory.Application/HackStory.Application.csproj backend/HackStory.Application/
+COPY backend/HackStory.Infrastructure/HackStory.Infrastructure.csproj backend/HackStory.Infrastructure/
+COPY backend/HackStory.Api/HackStory.Api.csproj backend/HackStory.Api/
+
+# 依存関係を復元
+RUN dotnet restore
+
+# すべてのソースコードをコピー
+COPY backend/ .
+
+# ビルド
+WORKDIR /src/backend/HackStory.Api
+RUN dotnet build -c Release -o /app/build
+
+# 公開
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish
+
+# ランタイムイメージ
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+COPY --from=publish /app/publish .
+
+ENTRYPOINT ["dotnet", "HackStory.Api.dll"]
+

@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "ストーリーの一意のID"
+    },
+    "title": {
+      "type": "string",
+      "description": "ストーリーのタイトル"
+    },
+    "description": {
+      "type": "string",
+      "description": "ストーリーの説明"
+    },
+    "chapters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/chapter"
+      },
+      "description": "チャプターの配列"
+    }
+  },
+  "required": ["id", "title", "chapters"],
+  "definitions": {
+    "chapter": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "チャプターID（1から開始）"
+        },
+        "title": {
+          "type": "string",
+          "description": "チャプターのタイトル"
+        },
+        "content": {
+          "type": "string",
+          "description": "チャプターの本文"
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/choice"
+          },
+          "description": "選択肢の配列"
+        }
+      },
+      "required": ["id", "title", "content"]
+    },
+    "choice": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "選択肢の一意のID"
+        },
+        "text": {
+          "type": "string",
+          "description": "選択肢のテキスト"
+        },
+        "nextChapter": {
+          "type": "integer",
+          "description": "次のチャプターID"
+        },
+        "effects": {
+          "type": "object",
+          "properties": {
+            "knowledge": {
+              "type": "integer",
+              "description": "知識ポイントの増減"
+            }
+          }
+        }
+      },
+      "required": ["id", "text", "nextChapter"]
+    }
+  }
+}
+
