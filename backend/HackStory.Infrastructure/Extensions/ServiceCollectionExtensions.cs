@@ -1,7 +1,12 @@
+using HackStory.Application.Interfaces;
+using HackStory.Application.Services;
+using HackStory.Domain.Entities;
 using HackStory.Infrastructure.Data;
+using HackStory.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace HackStory.Infrastructure.Extensions;
 
@@ -11,13 +16,30 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Database
+        // Database (接続文字列がある場合のみ)
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseNpgsql(connectionString));
+        }
+        else
+        {
+            // データベース接続がない場合でも動作するように、InMemoryデータベースを使用
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseInMemoryDatabase("HackStoryInMemory"));
+        }
 
         // Memory Cache (コスト削減のためRedis不使用)
         services.AddMemoryCache();
+
+        // Repositories
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped<IChapterProgressRepository, ChapterProgressRepository>();
+
+        // Services
+        services.AddScoped<IStoryService, StoryService>();
+        services.AddScoped<IChapterProgressService, ChapterProgressService>();
 
         return services;
     }

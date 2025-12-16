@@ -44,6 +44,7 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.UserId, e.StoryId, e.ChapterId }).IsUnique();
+            entity.Property(e => e.ChoicesJson).HasColumnType("jsonb"); // JSONB型として保存
             entity.HasOne(e => e.User)
                 .WithMany(u => u.ChapterProgresses)
                 .HasForeignKey(e => e.UserId)
@@ -61,6 +62,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Solution).IsRequired();
             entity.Property(e => e.Difficulty).IsRequired();
+            entity.Property(e => e.HintsJson).HasColumnType("jsonb"); // JSONB型として保存
         });
 
         // ChallengeProgress configuration

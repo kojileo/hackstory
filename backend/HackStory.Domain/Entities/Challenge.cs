@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace HackStory.Domain.Entities;
 
 public class Challenge
@@ -9,7 +7,7 @@ public class Challenge
     public string? Description { get; set; }
     public int Difficulty { get; set; } // 1-5
     public string Solution { get; set; } = string.Empty;
-    public JsonDocument? Hints { get; set; } // ヒントの配列
+    public string? HintsJson { get; set; } // ヒントの配列（JSON文字列）
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation properties

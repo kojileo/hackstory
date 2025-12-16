@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace HackStory.Domain.Entities;
 
 public class ChapterProgress
@@ -9,7 +7,7 @@ public class ChapterProgress
     public Guid StoryId { get; set; }
     public int ChapterId { get; set; }
     public bool Completed { get; set; } = false;
-    public JsonDocument? Choices { get; set; } // 選択した選択肢の記録
+    public string? ChoicesJson { get; set; } // 選択した選択肢の記録（JSON文字列）
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation properties
