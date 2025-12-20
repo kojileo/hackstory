@@ -1,11 +1,15 @@
 using HackStory.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace HackStory.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ProgressController : ControllerBase
 {
     private readonly IChapterProgressService _chapterProgressService;
@@ -27,14 +31,17 @@ public class ProgressController : ControllerBase
     {
         try
         {
-            // TODO: 認証からユーザーIDを取得（現在は仮のID）
-            var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            var userId = await GetUserIdFromClaimsAsync();
+            if (userId == null)
+            {
+                return Unauthorized(new { error = "Invalid user" });
+            }
             
             // ストーリーIDをGuidに変換（story-1形式から）
             var storyGuid = ProgressControllerHelpers.ConvertStoryIdToGuid(storyId);
 
             var progress = await _chapterProgressService.SaveProgressAsync(
-                userId,
+                userId.Value,
                 storyGuid,
                 chapterId,
                 request.Completed,
@@ -56,12 +63,15 @@ public class ProgressController : ControllerBase
     {
         try
         {
-            // TODO: 認証からユーザーIDを取得（現在は仮のID）
-            var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            var userId = await GetUserIdFromClaimsAsync();
+            if (userId == null)
+            {
+                return Unauthorized(new { error = "Invalid user" });
+            }
             
             var storyGuid = ProgressControllerHelpers.ConvertStoryIdToGuid(storyId);
 
-            var progress = await _chapterProgressService.GetChapterProgressAsync(userId, storyGuid, chapterId);
+            var progress = await _chapterProgressService.GetChapterProgressAsync(userId.Value, storyGuid, chapterId);
 
             if (progress == null)
             {
@@ -82,12 +92,15 @@ public class ProgressController : ControllerBase
     {
         try
         {
-            // TODO: 認証からユーザーIDを取得（現在は仮のID）
-            var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            var userId = await GetUserIdFromClaimsAsync();
+            if (userId == null)
+            {
+                return Unauthorized(new { error = "Invalid user" });
+            }
             
             var storyGuid = ProgressControllerHelpers.ConvertStoryIdToGuid(storyId);
 
-            var progress = await _chapterProgressService.GetUserStoryProgressAsync(userId, storyGuid);
+            var progress = await _chapterProgressService.GetUserStoryProgressAsync(userId.Value, storyGuid);
 
             return Ok(progress);
         }
@@ -96,6 +109,21 @@ public class ProgressController : ControllerBase
             _logger.LogError(ex, "Error getting story progress");
             return StatusCode(500, new { error = "Failed to get progress" });
         }
+    }
+
+    private async Task<Guid?> GetUserIdFromClaimsAsync()
+    {
+        // Firebase IDトークンからUIDを取得
+        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(firebaseUid))
+        {
+            return null;
+        }
+
+        // Firebase UIDからユーザーを取得
+        var firebaseAuthService = HttpContext.RequestServices.GetRequiredService<HackStory.Application.Services.IFirebaseAuthService>();
+        var user = await firebaseAuthService.GetUserByFirebaseUidAsync(firebaseUid);
+        return user?.Id;
     }
 }
 

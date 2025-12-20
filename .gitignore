@@ -23,6 +23,16 @@ backend/**/coverage/
 *.exe
 *.pdb
 
+# ASP.NET Core appsettings (development settings may contain sensitive info)
+backend/**/appsettings.Development.json
+backend/**/appsettings.*.json
+!backend/**/appsettings.json
+!backend/**/appsettings.*.example.json
+
+# Project root build artifacts
+obj/
+*.tsbuildinfo
+
 # Node.js / Next.js
 frontend/node_modules/
 frontend/.next/
@@ -65,6 +75,11 @@ docker-compose.override.yml
 *.sqlite
 *.sqlite3
 
+# Generated migration SQL files
+migration.sql
+scripts/migration-cockroachdb.sql
+# Note: scripts/check-users.sql is kept as it's a utility file
+
 # Temporary files
 tmp/
 temp/
@@ -73,5 +88,11 @@ temp/
 # Build outputs
 dist/
 build/
-*.tsbuildinfo
 
+# Firebase
+backend/HackStory.Api/firebase-service-account.json
+backend/HackStory.Api/*-firebase-adminsdk-*.json
+backend/**/*firebase*.json
+
+# Docker volumes
+cockroachdb-data/

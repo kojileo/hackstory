@@ -1,4 +1,7 @@
+'use client';
+
 import StoryViewer from '@/components/story/StoryViewer';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 interface StoryPageProps {
   params: {
@@ -8,9 +11,11 @@ interface StoryPageProps {
 
 export default function StoryPage({ params }: StoryPageProps) {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <StoryViewer storyId={params.id} />
-    </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-100">
+        <StoryViewer storyId={params.id} />
+      </div>
+    </AuthGuard>
   );
 }
 

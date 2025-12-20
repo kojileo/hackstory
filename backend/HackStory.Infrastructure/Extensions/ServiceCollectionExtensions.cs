@@ -21,7 +21,11 @@ public static class ServiceCollectionExtensions
         if (!string.IsNullOrEmpty(connectionString))
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(connectionString));
+                options.UseNpgsql(connectionString, npgsqlOptions =>
+                {
+                    // CockroachDB用の設定
+                    npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "public");
+                }));
         }
         else
         {
@@ -40,6 +44,8 @@ public static class ServiceCollectionExtensions
         // Services
         services.AddScoped<IStoryService, StoryService>();
         services.AddScoped<IChapterProgressService, ChapterProgressService>();
+        services.AddScoped<HackStory.Application.Services.IUserService, HackStory.Application.Services.UserService>();
+        services.AddScoped<HackStory.Application.Services.IFirebaseAuthService, HackStory.Application.Services.FirebaseAuthService>();
 
         return services;
     }

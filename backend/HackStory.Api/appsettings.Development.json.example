@@ -10,7 +10,8 @@
     "DefaultConnection": "Host=localhost;Port=26257;Database=hackstory_dev;Username=root;Password=;SSL Mode=Disable"
   },
   "Firebase": {
-    "ProjectId": "hackstory-dev",
+    "ProjectId": "your-firebase-project-id",
     "CredentialsPath": "firebase-service-account.json"
   }
 }
+

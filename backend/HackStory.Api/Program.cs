@@ -1,7 +1,11 @@
 using HackStory.Infrastructure.Extensions;
 using HackStory.Api.Middleware;
+using HackStory.Api.Extensions;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,10 +27,69 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API for HackStory - Learn hacking through interactive stories"
     });
+
+    // JWT認証の設定をSwaggerに追加
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 // Infrastructure
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Firebase
+builder.Services.AddFirebase(builder.Configuration);
+
+// Firebase Authentication (Firebase IDトークン検証)
+var firebaseConfig = builder.Configuration.GetSection("Firebase");
+var projectId = firebaseConfig["ProjectId"];
+
+if (!string.IsNullOrEmpty(projectId))
+{
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"https://securetoken.google.com/{projectId}";
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = $"https://securetoken.google.com/{projectId}",
+            ValidAudience = projectId
+        };
+    });
+}
+else
+{
+    // Firebase設定がない場合、認証を無効化（開発環境用）
+    builder.Services.AddAuthentication();
+}
 
 // CORS
 builder.Services.AddCors(options =>
@@ -68,6 +131,7 @@ app.UseCors("AllowFrontend");
 // レスポンスキャッシュ
 app.UseResponseCaching();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
